@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<!-- The COPYRIGHT file at the top level of this repository contains the full
+     copyright notices and license terms. -->
+<data>
+    <xpath expr="/form/field[@name='reference']" position="after">
+        <group id="work" colspan="6" col="10">
+            <label name="work"/>
+            <field name="work"/>
+            <label name="create_project"/>
+            <field name="create_project"/>
+            <button string="Load Project" name="load_project" icon="tryton-ok"/>
+        </group>
+    </xpath>
+</data>
