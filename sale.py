@@ -109,6 +109,8 @@ class Sale:
             project.invoice_product_type = 'service'
             project.party = self.party
             project.party_address = self.invoice_address
+            project.progress_quantity = 0.0
+            project.quantity = 0.0
         project.readonly = True
         return project
 
@@ -126,8 +128,7 @@ class Sale:
     def create_project_from_sales(self, parent_project, parent_line=None):
         lines = [x for x in self.lines if parent_line == x.parent]
         for line in lines:
-            print "qty:", line.quantity
-            if line.quantity == 0.00:
+            if line.type == 'line' and line.quantity == 0.00:
                 continue
             if line.task:
                 task = line.task
@@ -156,6 +157,7 @@ class Sale:
             sale_line = task.get_sale_line(parent_line)
             if parent_line:
                 sale_line.parent = parent_line
+            sale_line.save()
             self.lines += (sale_line,)
             if task.children:
                 self.create_lines_from_project(task.children, sale_line)
@@ -177,10 +179,12 @@ class SaleLine:
         task.type = 'task'
         if self.type == 'title':
             task.type = 'project'
+            task.quantity = 0.0
 
         task.name = self.rec_name
         task.company = self.sale.company
         task.project_invoice_method = 'progress'
+        task.progress_quantity = 0.0
         if self.type == 'title' or self.product and \
                 self.product.type == 'service':
             task.invoice_product_type = 'service'
@@ -188,5 +192,6 @@ class SaleLine:
             task.invoice_product_type = 'goods'
             task.product_goods = self.product
             task.on_change_product_goods()
-            task.unit_price = self.unit_price
+            task.list_price = self.unit_price
+
         return task

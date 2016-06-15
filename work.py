@@ -41,7 +41,8 @@ class Work:
         sale_line.description = self.name
         sale_line.task = self
         sale_line.childs = []
-        if type_ == 'project':
+
+        if type_ == 'title':
             return sale_line
 
         sale_line.quantity = 0
@@ -49,11 +50,11 @@ class Work:
             sale_line.product = self.product_goods
             sale_line.on_change_product()
             sale_line.unit = self.uom
-            sale_line.unit_price = self.unit_price
+            sale_line.unit_price = self.list_price
         if self.invoice_product_type == 'service':
             sale_line.product = self.product
             sale_line.on_change_product()
             sale_line.unit = Uom(ModelData.get_id('product', 'uom_hour'))
-            sale_line.unit_price = self.unit_price
+            sale_line.unit_price = self.list_price
 
         return sale_line
