@@ -157,8 +157,8 @@ class Sale:
             sale_line = task.get_sale_line(parent_line)
             if parent_line:
                 sale_line.parent = parent_line
+            sale_line.sale = self
             sale_line.save()
-            self.lines += (sale_line,)
             if task.children:
                 self.create_lines_from_project(task.children, sale_line)
 
