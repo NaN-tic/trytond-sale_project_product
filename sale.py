@@ -128,6 +128,8 @@ class Sale:
     def create_project_from_sales(self, parent_project, parent_line=None):
         lines = [x for x in self.lines if parent_line == x.parent]
         for line in lines:
+            if line.type != 'line':
+                continue
             if line.type == 'line' and line.quantity == 0.00:
                 continue
             if line.task:
