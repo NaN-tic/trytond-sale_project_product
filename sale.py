@@ -57,7 +57,6 @@ class Sale:
                     },
                 })
 
-
     @fields.depends('create_project', 'work', 'invoice_method',
         'shipment_method')
     def on_change_with_create_project(self):
@@ -169,6 +168,11 @@ class SaleLine:
     __metaclass__ = PoolMeta
     __name__ = 'sale.line'
     task = fields.Many2One('project.work', 'Task')
+
+    @classmethod
+    def __setup__(cls):
+        super(SaleLine, cls).__setup__()
+        cls._allow_modify_after_draft |= set(['task'])
 
     def _get_task(self):
         task = self.task
