@@ -170,7 +170,8 @@ class SaleLine:
     @classmethod
     def __setup__(cls):
         super(SaleLine, cls).__setup__()
-        cls._allow_modify_after_draft |= set(['task'])
+        if hasattr(SaleLine, '_allow_modify_after_draft'):
+            cls._allow_modify_after_draft |= set(['task'])
 
     def _get_task(self):
         task = self.task
