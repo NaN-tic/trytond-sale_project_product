@@ -3,7 +3,8 @@
 from trytond.model import fields
 from trytond.pool import PoolMeta, Pool
 from trytond.pyson import Bool, Eval, If
-
+from decimal import Decimal
+from trytond.modules.project_product import get_service_goods_aux
 
 __all__ = ['Work']
 
@@ -58,3 +59,17 @@ class Work:
             sale_line.unit_price = self.list_price
 
         return sale_line
+
+    @classmethod
+    def _get_cost(cls, works):
+
+        works_s = [x for x in works if x.sale_lines]
+        works_c = [x for x in works if not x.sale_lines]
+
+        costs = super(Work, cls)._get_cost(works_c)
+        costs.update(get_service_goods_aux(
+            works_s,
+            super(Work, cls)._get_cost,
+            lambda work: (Decimal(str(work.quantity)) *
+                work.sale_lines[0].cost_price)))
+        return costs
