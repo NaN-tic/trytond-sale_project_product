@@ -1,10 +1,11 @@
 # The COPYRIGHT file at the top level of this repository contains the full
 # copyright notices and license terms.
-from trytond.model import fields
-from trytond.pool import PoolMeta, Pool
-from trytond.pyson import Bool, Eval, If
 from decimal import Decimal
+
+from trytond.model import fields
 from trytond.modules.project_product import get_service_goods_aux
+from trytond.pool import PoolMeta, Pool
+from trytond.pyson import Bool, Eval
 
 __all__ = ['Work']
 
@@ -71,5 +72,5 @@ class Work:
             works_s,
             super(Work, cls)._get_cost,
             lambda work: (Decimal(str(work.quantity)) *
-                work.sale_lines[0].cost_price)))
+                Decimal(str(work.sale_lines[0].cost_price or 0.0)))))
         return costs
