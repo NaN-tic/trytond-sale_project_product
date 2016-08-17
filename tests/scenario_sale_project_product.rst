@@ -117,7 +117,7 @@ Create product::
 
     >>> product3 = Product()
     >>> template = ProductTemplate()
-    >>> template.name = 'Product 2'
+    >>> template.name = 'Product 3'
     >>> template.default_uom = unit
     >>> template.type = 'goods'
     >>> template.list_price = Decimal('50')
@@ -149,21 +149,24 @@ Create sale::
     >>> sale_line.quantity = 20.0
     >>> sale.click('quote')
     >>> sale.click('confirm')
+    >>> sale.click('process')
     >>> sale.reload()
+    >>> sale.work != None
+    True
 
 Check Project::
 
     >>> config.user = project_user.id
     >>> ProjectWork = Model.get('project.work')
     >>> project, = ProjectWork().find([('type', '=', 'project')])
-    >>> sale.project.id == project.id
+    >>> sale.work.id == project.id
     True
-
     >>> project.type
     u'project'
     >>> project.party == customer
     True
     >>> task1, task2 = project.children
+    >>> task1.product_goods
     >>> task1.product_goods == product1
     True
     >>> task1.quantity

@@ -5,15 +5,6 @@ from trytond.pool import Pool, PoolMeta
 from trytond.pyson import Bool, Eval, Equal, Not, Or
 
 
-__all__ = ['Sale', 'SaleLine', 'Work']
-
-
-class Work:
-    __metaclass__ = PoolMeta
-    __name__ = 'project.work'
-
-    sale_lines = fields.One2Many('sale.line', 'task', 'Sale Lines')
-
 
 class Sale:
     __metaclass__ = PoolMeta
