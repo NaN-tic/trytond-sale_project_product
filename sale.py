@@ -2,29 +2,29 @@
 # copyright notices and license terms.
 from trytond.model import fields
 from trytond.pool import Pool, PoolMeta
-from trytond.pyson import Bool, Eval, Equal, Not, Or
-
+from trytond.pyson import Bool, Eval
 
 
 class Sale:
     __metaclass__ = PoolMeta
     __name__ = 'sale.sale'
-    work = fields.Many2One('project.work', 'Project',
-        states={
-            'readonly': Or(Not(Equal(Eval('invoice_method'), 'manual')),
-                Not(Equal(Eval('shipment_method'), 'manual'))),
-            },
-        domain=[
+    work = fields.Many2One('project.work', 'Project', domain=[
             ('type', '=', 'project'),
             ('company', '=', Eval('company', -1)),
             ('party', '=', Eval('party', -1)),
             ],
+        states={
+            'readonly': ((Eval('invoice_method') != 'manual')
+                | (Eval('shipment_method') != 'manual')
+                | ~Eval('state').in_(['draft', 'quotation', 'confirmed'])),
+            },
         depends=['company', 'party', 'invoice_method', 'shipment_method'])
     create_project = fields.Boolean('Create Project',
         states={
-            'readonly': Or(Or(Not(Equal(Eval('invoice_method'), 'manual')),
-                Not(Equal(Eval('shipment_method'), 'manual'))),
-                Bool(Eval('work'))),
+            'readonly': ((Eval('invoice_method') != 'manual')
+                | (Eval('shipment_method') != 'manual')
+                | Bool(Eval('work'))
+                | ~Eval('state').in_(['draft', 'quotation', 'confirmed'])),
             },
         depends=['work', 'invoice_method', 'shipment_method'])
 
@@ -67,6 +67,7 @@ class Sale:
 
     @classmethod
     def update_project(cls, sales):
+        # TODO: it's used?
         Line = Pool().get('sale.line')
         for sale in sales:
             if sale.work:
@@ -107,7 +108,7 @@ class Sale:
     @classmethod
     def create_projects(cls, sales):
         for sale in sales:
-            if sale.work is None and not sale.create_project:
+            if not sale.create_project or sale.work != None:
                 continue
             project = sale._get_project()
             sale.create_project_from_sales(project)
