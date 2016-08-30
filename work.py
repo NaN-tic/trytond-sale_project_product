@@ -16,19 +16,25 @@ class Work:
     sale_lines = fields.One2Many('sale.line', 'task', 'Sale Lines',
         readonly=True)
 
-    @property
-    def sale_line_quantities(self):
-        return sum([l.quantity for l in self.sale_lines \
-            if l.type == 'line'], 0.0)
-
     @classmethod
     def __setup__(cls):
         super(Work, cls).__setup__()
         cls.quantity.states['readonly'] = Bool(Eval('sale_lines'))
         if 'sale_lines' not in cls.quantity.depends:
             cls.quantity.depends.append('sale_lines')
+        cls._error_messages.update({
+                'not_salable_product': (
+                    'You cannot load the project "%(project)s" in sale '
+                    '"%(sale)s" because the product "%(product)s" of task '
+                    '"%(task)s" is not salable.'),
+                })
 
-    def get_sale_line(self, parent):
+    @property
+    def sale_line_quantities(self):
+        return sum([l.quantity for l in self.sale_lines
+            if l.type == 'line'], 0.0)
+
+    def get_sale_line(self, sale):
         pool = Pool()
         ModelData = pool.get('ir.model.data')
         Uom = pool.get('product.uom')
@@ -39,6 +45,7 @@ class Work:
         if self.type == 'project':
             type_ = 'title'
 
+        sale_line.sale = sale
         sale_line.type = type_
         sale_line.description = self.name
         sale_line.task = self
@@ -49,11 +56,25 @@ class Work:
 
         sale_line.quantity = 0
         if self.invoice_product_type == 'goods':
+            if not self.product_goods.salable:
+                self.raise_user_error('not_salable_product', {
+                        'project': sale.work.rec_name,
+                        'sale': sale.rec_name,
+                        'product': self.product_goods.rec_name,
+                        'task': self.rec_name,
+                        })
             sale_line.product = self.product_goods
             sale_line.on_change_product()
             sale_line.unit = self.uom
             sale_line.unit_price = self.list_price
         if self.invoice_product_type == 'service':
+            if not self.product.salable:
+                self.raise_user_error('not_salable_product', {
+                        'project': sale.work.rec_name,
+                        'sale': sale.rec_name,
+                        'product': self.product.rec_name,
+                        'task': self.rec_name,
+                        })
             sale_line.product = self.product
             sale_line.on_change_product()
             sale_line.unit = Uom(ModelData.get_id('product', 'uom_hour'))
@@ -74,3 +95,12 @@ class Work:
             lambda work: (Decimal(str(work.quantity)) *
                 Decimal(str(work.sale_lines[0].cost_price or 0.0)))))
         return costs
+
+    @classmethod
+    def copy(cls, works, default=None):
+        if default is None:
+            default = {}
+        else:
+            default = default.copy()
+        default['sale_lines'] = None
+        return super(Work, cls).copy(works, default=default)

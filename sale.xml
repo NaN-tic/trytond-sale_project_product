@@ -10,10 +10,23 @@
             <field name="name">sale_form</field>
         </record>
 
+        <!-- project.work -->
         <record model="ir.ui.view" id="work_view_form">
             <field name="model">project.work</field>
             <field name="inherit" ref="project.work_view_form"/>
             <field name="name">work_form</field>
+        </record>
+
+        <record model="ir.ui.view" id="work_view_tree">
+            <field name="model">project.work</field>
+            <field name="inherit" ref="project.work_view_tree"/>
+            <field name="name">work_tree</field>
+        </record>
+
+        <record model="ir.ui.view" id="work_view_list">
+            <field name="model">project.work</field>
+            <field name="inherit" ref="project.work_view_list"/>
+            <field name="name">work_list</field>
         </record>
     </data>
 </tryton>

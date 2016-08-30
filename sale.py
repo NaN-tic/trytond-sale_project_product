@@ -1,6 +1,6 @@
 # The COPYRIGHT file at the top level of this repository contains the full
 # copyright notices and license terms.
-from trytond.model import fields
+from trytond.model import ModelView, fields
 from trytond.pool import Pool, PoolMeta
 from trytond.pyson import Bool, Eval
 
@@ -16,17 +16,19 @@ class Sale:
         states={
             'readonly': ((Eval('invoice_method') != 'manual')
                 | (Eval('shipment_method') != 'manual')
-                | ~Eval('state').in_(['draft', 'quotation', 'confirmed'])),
+                | Bool(Eval('create_project'))
+                | ~Eval('state').in_(['draft', 'quotation'])),
             },
-        depends=['company', 'party', 'invoice_method', 'shipment_method'])
+        depends=['company', 'party', 'invoice_method', 'shipment_method',
+            'create_project', 'state'])
     create_project = fields.Boolean('Create Project',
         states={
             'readonly': ((Eval('invoice_method') != 'manual')
                 | (Eval('shipment_method') != 'manual')
                 | Bool(Eval('work'))
-                | ~Eval('state').in_(['draft', 'quotation', 'confirmed'])),
+                | ~Eval('state').in_(['draft', 'quotation'])),
             },
-        depends=['work', 'invoice_method', 'shipment_method'])
+        depends=['invoice_method', 'shipment_method', 'work', 'state'])
 
     @classmethod
     def __setup__(cls):
@@ -44,34 +46,32 @@ class Sale:
                 ))
         cls._buttons.update({
                 'load_project': {
-                    'invisible': ~Eval('state').in_(['draft', 'quotation']),
+                    'invisible': Eval('state') != 'draft',
+                    'readonly': ~Bool(Eval('work')) | Bool(Eval('lines_tree'))
                     },
                 })
 
-    @fields.depends('create_project', 'work', 'invoice_method',
-        'shipment_method')
+    @fields.depends('work', 'invoice_method', 'shipment_method')
+    def on_change_with_work(self):
+        if self.invoice_method != 'manual' or self.invoice_method != 'manual':
+            return None
+        return self.work.id if self.work else None
+
+    @fields.depends('work')
+    def on_change_work(self):
+        if self.work:
+            self.create_project = False
+
+    @fields.depends('create_project', 'invoice_method', 'shipment_method')
     def on_change_with_create_project(self):
-        if (self.work or self.invoice_method != 'manual' or
-                self.invoice_method != 'manual'):
+        if self.invoice_method != 'manual' or self.invoice_method != 'manual':
             return False
         return self.create_project
 
-    @classmethod
-    def check_project(cls, sales):
-        for sale in sales:
-            if sale.work or sale.create_project:
-                if (sale.invoice_method != 'manual' or
-                        sale.shipment_method != 'manual'):
-                    cls.raise_user_error('check_project_error',
-                        (sale.rec_name,))
-
-    @classmethod
-    def update_project(cls, sales):
-        # TODO: it's used?
-        Line = Pool().get('sale.line')
-        for sale in sales:
-            if sale.work:
-                Line.update_tasks(sale.lines)
+    @fields.depends('create_project')
+    def on_change_create_project(self):
+        if self.create_project:
+            self.work = None
 
     @classmethod
     def quote(cls, sales):
@@ -84,9 +84,28 @@ class Sale:
         cls.check_project(sales)
 
     @classmethod
+    def check_project(cls, sales):
+        for sale in sales:
+            if sale.work or sale.create_project:
+                if (sale.invoice_method != 'manual' or
+                        sale.shipment_method != 'manual'):
+                    cls.raise_user_error('check_project_error',
+                        (sale.rec_name,))
+
+    @classmethod
     def process(cls, sales):
         super(Sale, cls).process(sales)
         cls.create_projects(sales)
+
+    @classmethod
+    def create_projects(cls, sales):
+        for sale in sales:
+            if not sale.create_project or sale.work != None:
+                continue
+            project = sale._get_project()
+            sale.create_project_from_sales(project)
+            sale.work = project
+        cls.save(sales)
 
     def _get_project(self):
         project = self.work
@@ -105,17 +124,6 @@ class Sale:
         project.readonly = True
         return project
 
-    @classmethod
-    def create_projects(cls, sales):
-        for sale in sales:
-            if not sale.create_project or sale.work != None:
-                continue
-            project = sale._get_project()
-            sale.create_project_from_sales(project)
-            sale.work = project
-        cls.save(sales)
-
-    @fields.depends('task_parent')
     def create_project_from_sales(self, parent_project, parent_line=None):
         lines = [x for x in self.lines if parent_line == x.parent]
         for line in lines:
@@ -138,6 +146,7 @@ class Sale:
                 self.create_project_from_sales(task, line)
 
     @classmethod
+    @ModelView.button
     def load_project(cls, sales):
         for sale in sales:
             if not sale.work:
@@ -147,19 +156,35 @@ class Sale:
 
     def create_lines_from_project(self, project, parent_line=None):
         for task in project:
-            sale_line = task.get_sale_line(parent_line)
+            sale_line = task.get_sale_line(self)
             if parent_line:
                 sale_line.parent = parent_line
-            sale_line.sale = self
             sale_line.save()
             if task.children:
                 self.create_lines_from_project(task.children, sale_line)
+
+    @classmethod
+    def copy(cls, sales, default=None):
+        # sales that already created their project
+        sales_no_create_project = [s for s in sales
+            if s.create_project and s.work]
+        if sales_no_create_project:
+            if default is None:
+                default_no_create_project = {}
+            else:
+                default_no_create_project = default.copy()
+            new_sales = [s for s in sales if s not in sales_no_create_project]
+            res = super(Sale, cls).copy(new_sales, default=default)
+            res.extend(super(Sale, cls).copy(sales_no_create_project,
+                default=default_no_create_project))
+            return res
+        return super(Sale, cls).copy(sales, default=default)
 
 
 class SaleLine:
     __metaclass__ = PoolMeta
     __name__ = 'sale.line'
-    task = fields.Many2One('project.work', 'Task')
+    task = fields.Many2One('project.work', 'Task', readonly=True)
 
     @classmethod
     def __setup__(cls):
@@ -194,3 +219,12 @@ class SaleLine:
             task.list_price = self.unit_price
 
         return task
+
+    @classmethod
+    def copy(cls, lines, default=None):
+        if default is None:
+            default = {}
+        else:
+            default = default.copy()
+        default['task'] = None
+        return super(SaleLine, cls).copy(lines, default=default)

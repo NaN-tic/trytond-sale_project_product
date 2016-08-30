@@ -8,7 +8,8 @@
             <field name="work"/>
             <label name="create_project"/>
             <field name="create_project"/>
-            <button string="Load Project" name="load_project" icon="tryton-ok"/>
+            <button name="load_project" string="Load Project" icon="tryton-ok"
+                help="You can only load a project if the sale does not have lines."/>
         </group>
     </xpath>
 </data>
