@@ -1,5 +1,7 @@
 # The COPYRIGHT file at the top level of this repository contains the full
 # copyright notices and license terms.
+from datetime import timedelta
+
 from trytond.model import ModelView, fields
 from trytond.pool import Pool, PoolMeta
 from trytond.pyson import Bool, Eval
@@ -95,7 +97,15 @@ class Sale:
     @classmethod
     def process(cls, sales):
         super(Sale, cls).process(sales)
+        cls.update_projects(sales)
         cls.create_projects(sales)
+
+    @classmethod
+    def update_projects(cls, sales):
+        Line = Pool().get('sale.line')
+        for sale in sales:
+            if not sale.create_project and sale.work:
+                Line.update_tasks(sale.lines)
 
     @classmethod
     def create_projects(cls, sales):
@@ -135,15 +145,18 @@ class Sale:
                 task = line.task
             else:
                 task = line._get_task()
-                task.sale_lines = []
-                task.sale_lines += (line,)
-                if parent_project:
-                    task.parent = parent_project
+                if task:
+                    task.sale_lines = []
+                    task.sale_lines += (line,)
+                    if parent_project:
+                        task.parent = parent_project
 
-            task.quantity = task.sale_line_quantities
-            task.save()
+            if task:
+                task.quantity = task.sale_line_quantities
+                task.save()
             if line.childs:
-                self.create_project_from_sales(task, line)
+                self.create_project_from_sales(
+                    task if task else parent_project, line)
 
     @classmethod
     @ModelView.button
@@ -191,32 +204,94 @@ class SaleLine:
         super(SaleLine, cls).__setup__()
         if hasattr(SaleLine, '_allow_modify_after_draft'):
             cls._allow_modify_after_draft |= set(['task'])
+        cls._error_messages.update({
+                'missing_unit': (
+                    'It is not possible to create or update the task for sale '
+                    'line "%s" because it doesn\'t have Unit.'),
+                'unsupported_service_unit': (
+                    'It is not possible to create the task for the sale line '
+                    '"%s" because its product is a service (or it doesn\'t '
+                    'have a product, so it is assumed it is a service) but '
+                    'the unit is not a Time UoM.'),
+                })
+
+    @classmethod
+    def update_tasks(cls, lines):
+        for line in lines:
+            if line.task:
+                line._update_task()
+                line.task.save()
+
+    def _update_task(self):
+        pool = Pool()
+        ModelData = pool.get('ir.model.data')
+        Uom = pool.get('product.uom')
+
+        if not self.task:
+            return
+        if not self.unit:
+            self.raise_user_error('missing_unit', (self.rec_name,))
+        if self.task.invoice_product_type == 'service':
+            assert self.task.product == self.product, (
+                'Product %s of task %s is not the same than product of sale '
+                'line %s' % (self.task.product, self.task, self.product))
+            time_uom_category_id = ModelData.get_id('product', 'uom_cat_time')
+            if self.unit.category.id != time_uom_category_id:
+                self.raise_user_error('unsupported_service_unit',
+                    (self.rec_name,))
+            seconds_uom = Uom(ModelData.get_id('product', 'uom_second'))
+            self.task.effort_duration += timedelta(
+                seconds=Uom.compute_qty(self.unit, self.quantity, seconds_uom))
+        else:
+            assert self.task.product_goods == self.product, (
+                'Product %s of task %s is not the same than product of sale '
+                'line %s' % (self.task.product_goods, self.task, self.product))
+            self.task.quantity += Uom.compute_qty(
+                self.unit, self.quantity, self.task.uom)
 
     def _get_task(self):
+        pool = Pool()
+        ModelData = pool.get('ir.model.data')
+        Uom = pool.get('product.uom')
+        Work = pool.get('project.work')
+
         task = self.task
         if task:
             return task
 
-        Work = Pool().get('project.work')
-        task = Work()
-        task.quantity = self.quantity
-        task.type = 'task'
-        if self.type == 'title':
-            task.type = 'project'
-            task.quantity = 0.0
+        if self.type not in ('title', 'line'):
+            return
 
+        task = Work()
+        task.type = 'task'
         task.name = self.rec_name
         task.company = self.sale.company
-        task.project_invoice_method = 'progress'
-        task.progress_quantity = 0.0
-        if self.type == 'title' or self.product and \
-                self.product.type == 'service':
+
+        if self.type == 'title':
+            task.type = 'project'
+            task.project_invoice_method = 'progress'
+        elif not self.product or self.product.type == 'service':
+            time_uom_category_id = ModelData.get_id('product', 'uom_cat_time')
+            if not self.unit:
+                self.raise_user_error('missing_unit', (self.rec_name,))
+            if self.unit.category.id != time_uom_category_id:
+                self.raise_user_error('unsupported_service_unit',
+                    (self.rec_name,))
+
             task.invoice_product_type = 'service'
+            task.product = self.product
+            seconds_uom = Uom(ModelData.get_id('product', 'uom_second'))
+            task.effort_duration = timedelta(
+                seconds=Uom.compute_qty(self.unit, self.quantity, seconds_uom))
         else:
+            if not self.unit:
+                self.raise_user_error('missing_unit', (self.rec_name,))
             task.invoice_product_type = 'goods'
             task.product_goods = self.product
             task.on_change_product_goods()
             task.list_price = self.unit_price
+            task.uom = self.unit
+            task.quantity = self.quantity
 
         return task
 
