@@ -2,6 +2,14 @@
 msgid ""
 msgstr "Content-Type: text/plain; charset=utf-8\n"
 
+msgctxt "error:project.work:"
+msgid ""
+"You cannot load the project \"%(project)s\" in sale \"%(sale)s\" because the"
+" product \"%(product)s\" of task \"%(task)s\" is not salable."
+msgstr ""
+"No puedes cargar el proyecto \"%(project)s\" a la venta \"%(sale)s\" porqué "
+"el producto \"%(product)s\" de la tarea \"%(task)s\" no es vendible."
+
 msgctxt "error:sale.sale:"
 msgid ""
 "Invalid combination of shipment and invoicing methods on sale \"%s\" for process Projects.\n"
@@ -37,3 +45,7 @@ msgstr "Proyecto"
 msgctxt "view:sale.sale:"
 msgid "Load Project"
 msgstr "Cargar proyecto"
+
+msgctxt "view:sale.sale:"
+msgid "You can only load a project if the sale does not have lines."
+msgstr "Sólo puedes cargar un proyecto si la venta no tiene líneas."
