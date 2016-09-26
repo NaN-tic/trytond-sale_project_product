@@ -84,16 +84,22 @@ class Work:
 
     @classmethod
     def _get_cost(cls, works):
-
         works_s = [x for x in works if x.sale_lines]
         works_c = [x for x in works if not x.sale_lines]
 
         costs = super(Work, cls)._get_cost(works_c)
+
+        def goods_computation(work):
+            try:
+                cost_price = Decimal(str(work.sale_lines[0].cost_price or 0.0))
+            except AttributeError:
+                cost_price = work.product_goods.cost_price
+            return Decimal(str(work.quantity)) * cost_price
+
         costs.update(get_service_goods_aux(
             works_s,
             super(Work, cls)._get_cost,
-            lambda work: (Decimal(str(work.quantity)) *
-                Decimal(str(work.sale_lines[0].cost_price or 0.0)))))
+            goods_computation))
         return costs
 
     @classmethod
