@@ -153,6 +153,8 @@ class Sale:
 
             if task:
                 task.quantity = task.sale_line_quantities
+                if getattr(task, 'progress_quantity', None) is None:
+                    task.progress_quantity = 0
                 task.save()
             if line.childs:
                 self.create_project_from_sales(
