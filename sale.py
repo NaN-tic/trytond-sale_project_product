@@ -40,6 +40,11 @@ class Sale:
                 {'project': project.id})
 
     def _get_project(self):
+
+        project = None
+        line = self.lines and self.lines[0]
+        if line.project:
+            return project
         Work = Pool().get('project.work')
         project = Work()
         project.name = self.rec_name
