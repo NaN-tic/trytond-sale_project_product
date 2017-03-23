@@ -2,6 +2,7 @@
 # this repository contains the full copyright notices and license terms.
 from trytond.model import fields
 from trytond.pool import Pool, PoolMeta
+from trytond.pyson import Eval, Bool
 from datetime import date
 
 __all__ = ['Sale', 'SaleLine']
@@ -20,7 +21,12 @@ class Sale:
     __metaclass__ = PoolMeta
 
     parent_project = fields.Many2One('project.work', 'Parent Project',
-        select=True)
+        select=True,
+        domain=[('party', '=', Eval('party'))],
+        states={
+            'readonly': Eval('state') != 'draft',
+            },
+        depends=['state', 'party'])
 
     @classmethod
     def process(cls, sales):
