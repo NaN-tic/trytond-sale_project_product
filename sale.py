@@ -15,6 +15,14 @@ class SaleLine:
     project = fields.Many2One('project.work', 'Project', readonly=True,
         select=True)
 
+    @classmethod
+    def copy(cls, lines, default=None):
+        if default is None:
+            default = {}
+
+        default['project'] = None
+        return super(SaleLine, cls).copy(lines, default=default)
+
 
 class Sale:
     __name__ = 'sale.sale'
