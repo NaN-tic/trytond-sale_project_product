@@ -11,7 +11,6 @@ __all__ = ['Sale', 'SaleLine']
 class SaleLine:
     __name__ = 'sale.line'
     __metaclass__ = PoolMeta
-
     project = fields.Many2One('project.work', 'Project', readonly=True,
         select=True)
 
@@ -19,7 +18,6 @@ class SaleLine:
     def copy(cls, lines, default=None):
         if default is None:
             default = {}
-
         default['project'] = None
         return super(SaleLine, cls).copy(lines, default=default)
 
@@ -27,7 +25,6 @@ class SaleLine:
 class Sale:
     __name__ = 'sale.sale'
     __metaclass__ = PoolMeta
-
     parent_project = fields.Many2One('project.work', 'Parent Project',
         select=True,
         domain=[('party', '=', Eval('party'))],
@@ -54,12 +51,13 @@ class Sale:
                 {'project': project.id})
 
     def _get_project(self):
+        Work = Pool().get('project.work')
 
         project = None
         line = self.lines and self.lines[0]
         if line.project:
             return project
-        Work = Pool().get('project.work')
+
         project = Work()
         project.name = self.rec_name
         project.type = 'project'

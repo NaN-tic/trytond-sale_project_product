@@ -2,45 +2,21 @@
 msgid ""
 msgstr "Content-Type: text/plain; charset=utf-8\n"
 
-msgctxt "error:project.work:"
-msgid ""
-"You cannot load the project \"%(project)s\" in sale \"%(sale)s\" because the"
-" product \"%(product)s\" of task \"%(task)s\" is not salable."
-msgstr ""
-"No pots carregar el projecte \"%(project)s\" a la venta \"%(sale)s\" perquè "
-"el producte \"%(product)s\" de la tasca \"%(task)s\" no és vendible."
-
-msgctxt "error:sale.sale:"
-msgid ""
-"Invalid combination of shipment and invoicing methods on sale \"%s\" for process Projects.\n"
-"You must set both to \"manual\""
-msgstr ""
-"Combinació incorrecte de mètodes d'enviament i facturació a la venda \"%s\" per processar projectes.\n"
-"Has d'establir els dos com a \"manual\"."
-
-msgctxt "error:sale.sale:"
-msgid ""
-"You can not set the state of the sale \"%s\" to Draft when it has not been "
-"processed with both methods (shipment & invoicing) set to \"manual\"."
-msgstr ""
-"No pots tornar la venda \"%s\" a borrador quan no ha estat processada amb "
-"els dos mètodes (enviament i facturació) a \"manual\"."
-
 msgctxt "field:project.work,sale_lines:"
 msgid "Sale Lines"
 msgstr "Línies de venda"
 
-msgctxt "field:sale.line,task:"
-msgid "Task"
-msgstr "Tasca"
-
-msgctxt "field:sale.sale,create_project:"
-msgid "Create Project"
-msgstr "Crea el projecte"
-
-msgctxt "field:sale.sale,work:"
+msgctxt "field:sale.line,project:"
 msgid "Project"
 msgstr "Projecte"
+
+msgctxt "field:sale.sale,parent_project:"
+msgid "Parent Project"
+msgstr "Projecte pare"
+
+msgctxt "model:ir.action,name:act_sale_project_product_form"
+msgid "Sales"
+msgstr "Vendes"
 
 msgctxt "view:sale.sale:"
 msgid "Load Project"
