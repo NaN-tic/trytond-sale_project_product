@@ -6,6 +6,10 @@ msgctxt "field:project.work,sale_lines:"
 msgid "Sale Lines"
 msgstr "Línies de venda"
 
+msgctxt "field:project.work,sales:"
+msgid "Sales"
+msgstr "Vendes"
+
 msgctxt "field:sale.line,project:"
 msgid "Project"
 msgstr "Projecte"
@@ -14,9 +18,17 @@ msgctxt "field:sale.sale,parent_project:"
 msgid "Parent Project"
 msgstr "Projecte pare"
 
+msgctxt "field:sale.sale,projects:"
+msgid "Projects"
+msgstr "Projectes"
+
 msgctxt "model:ir.action,name:act_sale_project_product_form"
 msgid "Sales"
 msgstr "Vendes"
+
+msgctxt "model:ir.action,name:act_sale_project_work_form"
+msgid "Projects"
+msgstr "Projectes"
 
 msgctxt "view:sale.sale:"
 msgid "Load Project"
