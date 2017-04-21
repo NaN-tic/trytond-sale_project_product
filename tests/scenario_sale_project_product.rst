@@ -128,6 +128,15 @@ Create product::
     >>> product3.template = template
     >>> product3.save()
 
+Create a project::
+
+    >>> ProjectWork = Model.get('project.work')
+    >>> project = ProjectWork()
+    >>> project.name = 'Main Customer Project'
+    >>> project.type = 'project'
+    >>> project.party = customer
+    >>> project.save()
+
 Create sale::
 
     >>> config.user = sale_user.id
@@ -138,7 +147,7 @@ Create sale::
     >>> sale.payment_term = payment_term
     >>> sale.invoice_method = 'manual'
     >>> sale.shipment_method = 'manual'
-    >>> sale.create_project = True
+    >>> sale.parent_project = project
     >>> sale_line = SaleLine()
     >>> sale.lines.append(sale_line)
     >>> sale_line.product = product1
@@ -151,79 +160,8 @@ Create sale::
     >>> sale.click('confirm')
     >>> sale.click('process')
     >>> sale.reload()
-    >>> sale.work != None
-    True
-
-Check Project::
-
-    >>> config.user = project_user.id
-    >>> ProjectWork = Model.get('project.work')
-    >>> project, = ProjectWork().find([('type', '=', 'project')])
-    >>> sale.work.id == project.id
-    True
-    >>> project.type
-    u'project'
-    >>> project.party == customer
-    True
-    >>> task1, task2 = project.children
-    >>> task1.product_goods
-    >>> task1.product_goods == product1
-    True
-    >>> task1.quantity
-    10.0
-    >>> task2.product_goods == product2
-    True
-    >>> task2.quantity
-    20.0
-
-Create new sale::
-
-    >>> config.user = sale_user.id
-    >>> Sale = Model.get('sale.sale')
-    >>> SaleLine = Model.get('sale.line')
-    >>> sale = Sale()
-    >>> sale.party = customer
-    >>> sale.payment_term = payment_term
-    >>> sale.invoice_method = 'manual'
-    >>> sale.shipment_method = 'manual'
-    >>> sale.project = project
-
-Load project::
-
-    >>> config.user = project_user.id
-    >>> sale.click('load_project')
-    >>> sale_line1, sale_line2 = sale.lines
-    >>> sale_line1.product == product1
-    True
-    >>> sale_line1.quantity
-    0.0
-    >>> sale_line2.product == product2
-    True
-    >>> sale_line2.quantity
-    0.0
-
-Modify sale lines and add new one::
-
-    >>> config.user = sale_user.id
-    >>> sale_line1.quantity = -5.0
-    >>> sale_line2.quantity = 20.0
-    >>> sale_line = SaleLine()
-    >>> sale.lines.append(sale_line)
-    >>> sale_line.product = product3
-    >>> sale_line.quantity = 100.0
-    >>> sale.click('quote')
-    >>> sale.click('confirm')
-
-Check Project::
-
-    >>> config.user = project_user.id
-    >>> project.reload()
-    >>> task1, task2, task3 = project.children
-    >>> task1.quantity
-    5.0
-    >>> task2.quantity
-    40.0
-    >>> task3.product_goods == product3
-    True
-    >>> task3.quantity
-    100.0
+    >>> line1, line2 = sale.lines
+    >>> line1.project.parent.name
+    u'Main Customer Project'
+    >>> line2.project.parent.name
+    u'Main Customer Project'
