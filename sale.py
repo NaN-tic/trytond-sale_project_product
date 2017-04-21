@@ -2,7 +2,7 @@
 # this repository contains the full copyright notices and license terms.
 from trytond.model import fields
 from trytond.pool import Pool, PoolMeta
-from trytond.pyson import Eval, Bool
+from trytond.pyson import Eval
 from datetime import date
 
 __all__ = ['Sale', 'SaleLine']
@@ -32,6 +32,15 @@ class Sale:
             'readonly': Eval('state') != 'draft',
             },
         depends=['state', 'party'])
+    projects = fields.Function(fields.One2Many('project.work', None,
+        'Projects'), 'get_projects')
+
+    def get_projects(self, name):
+        projects = set()
+        for line in self.lines:
+            if line.project:
+                projects.add(line.project.id)
+        return list(projects)
 
     @classmethod
     def process(cls, sales):

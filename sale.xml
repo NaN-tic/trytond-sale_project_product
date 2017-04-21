@@ -15,5 +15,19 @@
             <field name="inherit" ref="sale.sale_line_view_form"/>
             <field name="name">sale_line_form</field>
         </record>
+
+        <!-- Keywords -->
+        <record model="ir.action.act_window" id="act_sale_project_work_form">
+            <field name="name">Projects</field>
+            <field name="res_model">project.work</field>
+            <field name="domain"
+                eval="[('sales', 'in', Eval('active_ids'))]"
+                pyson="1"/>
+        </record>
+        <record model="ir.action.keyword" id="act_open_sale_project_work_keyword">
+            <field name="keyword">form_relate</field>
+            <field name="model">sale.sale,-1</field>
+            <field name="action" ref="act_sale_project_work_form"/>
+        </record>
     </data>
 </tryton>

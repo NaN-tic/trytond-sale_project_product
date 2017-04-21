@@ -10,8 +10,21 @@ __all__ = ['Work']
 class Work:
     __name__ = 'project.work'
     __metaclass__ = PoolMeta
-    sale_lines = fields.One2Many('sale.line', 'task', 'Sale Lines',
+    sales = fields.Function(fields.One2Many('sale.sale', None,
+        'Sales'), 'get_sales', searcher='search_sales')
+    sale_lines = fields.One2Many('sale.line', 'project', 'Sale Lines',
         readonly=True)
+
+    def get_sales(self, name):
+        sales = set()
+        for line in self.sale_lines:
+            if line.sale:
+                sales.add(line.sale.id)
+        return list(sales)
+
+    @classmethod
+    def search_sales(cls, name, clause):
+        return [('sale_lines.sale',) + tuple(clause[1:])]
 
     @classmethod
     def copy(cls, works, default=None):
