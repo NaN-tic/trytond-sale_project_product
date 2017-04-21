@@ -1,0 +1,27 @@
+#
+msgid ""
+msgstr "Content-Type: text/plain; charset=utf-8\n"
+
+msgctxt "field:project.work,sale_lines:"
+msgid "Sale Lines"
+msgstr "Líneas de venta"
+
+msgctxt "field:sale.line,project:"
+msgid "Project"
+msgstr "Proyecto"
+
+msgctxt "field:sale.sale,parent_project:"
+msgid "Parent Project"
+msgstr "Proyecto padre"
+
+msgctxt "model:ir.action,name:act_sale_project_product_form"
+msgid "Sales"
+msgstr "Ventas"
+
+msgctxt "view:sale.sale:"
+msgid "Load Project"
+msgstr "Cargar proyecto"
+
+msgctxt "view:sale.sale:"
+msgid "You can only load a project if the sale does not have lines."
+msgstr "Sólo puedes cargar un proyecto si la venta no tiene líneas."

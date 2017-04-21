@@ -4,11 +4,8 @@
 <data>
     <xpath expr="/form/field[@name='reference']" position="after">
         <group id="work" colspan="6" col="10">
-            <label name="work"/>
-            <field name="work"/>
-            <label name="create_project"/>
-            <field name="create_project"/>
-            <button string="Load Project" name="load_project" icon="tryton-ok"/>
+            <label name="parent_project"/>
+            <field name="parent_project"/>
         </group>
     </xpath>
 </data>
