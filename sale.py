@@ -38,6 +38,10 @@ class Sale:
     projects = fields.Function(fields.One2Many('project.work', None,
         'Projects'), 'get_projects')
 
+    def on_change_party(self):
+        super(Sale, self).on_change_party()
+        self.parent_project = None
+
     def get_projects(self, name):
         projects = set()
         for line in self.lines:
