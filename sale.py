@@ -27,7 +27,10 @@ class Sale:
     __metaclass__ = PoolMeta
     parent_project = fields.Many2One('project.work', 'Parent Project',
         select=True,
-        domain=[('party', '=', Eval('party'))],
+        domain=[
+            ('party', '=', Eval('party')),
+            ('type', '=', 'project'),
+            ],
         states={
             'readonly': Eval('state') != 'draft',
             },

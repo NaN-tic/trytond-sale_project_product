@@ -5,7 +5,8 @@
     <xpath expr="/form/field[@name='reference']" position="after">
         <group id="work" colspan="6" col="10">
             <label name="parent_project"/>
-            <field name="parent_project"/>
+            <field name="parent_project"
+                view_ids="project.work_view_list"/>
         </group>
     </xpath>
 </data>
