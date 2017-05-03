@@ -32,7 +32,7 @@ class Sale:
             ('type', '=', 'project'),
             ],
         states={
-            'readonly': Eval('state') != 'draft',
+            'readonly': ~Eval('state').in_(['draft', 'quotation', 'confirmed']),
             },
         depends=['state', 'party'])
     projects = fields.Function(fields.One2Many('project.work', None,
