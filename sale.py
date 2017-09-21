@@ -42,7 +42,7 @@ class Sale:
         super(Sale, self).on_change_party()
         self.parent_project = None
 
-    def get_projects(self, name):
+    def get_projects(self, name=None):
         projects = set()
         for line in self.lines:
             if line.project:
@@ -59,7 +59,7 @@ class Sale:
         pool = Pool()
         SaleLine = pool.get('sale.line')
         for sale in sales:
-            if not sale.parent_project:
+            if not sale.parent_project or sale.get_projects():
                 continue
             project = sale._get_project()
             project.save()
