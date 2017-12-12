@@ -5,7 +5,7 @@ from trytond.pool import Pool, PoolMeta
 from trytond.pyson import Eval
 from datetime import date
 
-__all__ = ['Sale', 'SaleLine']
+__all__ = ['Sale', 'SaleLine', 'SaleChangePartyStart', 'SaleChangeParty']
 
 
 class SaleLine:
@@ -42,7 +42,7 @@ class Sale:
         super(Sale, self).on_change_party()
         self.parent_project = None
 
-    def get_projects(self, name):
+    def get_projects(self, name=None):
         projects = set()
         for line in self.lines:
             if line.project:
@@ -59,7 +59,7 @@ class Sale:
         pool = Pool()
         SaleLine = pool.get('sale.line')
         for sale in sales:
-            if not sale.parent_project:
+            if not sale.parent_project or sale.get_projects():
                 continue
             project = sale._get_project()
             project.save()
@@ -91,3 +91,22 @@ class Sale:
         project.start_date = date.today()
         project.list_price = self.untaxed_amount
         return project
+
+
+class SaleChangePartyStart:
+    __metaclass__ = PoolMeta
+    __name__ = 'sale.change.party.start'
+    parent_project = fields.Many2One('project.work', 'Parent Project',
+        domain=[
+            ('party', '=', Eval('party')),
+            ('type', '=', 'project'),
+        ], depends=['party'])
+
+
+class SaleChangeParty:
+    __metaclass__ = PoolMeta
+    __name__ = 'sale.change.party'
+
+    def _get_sale(self, sale):
+        super(SaleChangeParty, self)._get_sale(sale)
+        sale.parent_project = self.start.parent_project

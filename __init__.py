@@ -9,5 +9,9 @@ def register():
     Pool.register(
         sale.Sale,
         sale.SaleLine,
+        sale.SaleChangePartyStart,
         work.Work,
         module='sale_project_product', type_='model')
+    Pool.register(
+        sale.SaleChangeParty,
+        module='sale_project_product', type_='wizard')
