@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<!-- This file is part of the sale_price_list_change_party module for Tryton.
+The COPYRIGHT file at the top level of this repository contains the full
+copyright notices and license terms. -->
+<data>
+    <xpath expr="/form/field[@name='price_list']" position="after">
+        <label name="parent_project"/>
+        <field name="parent_project"/>
+    </xpath>
+</data>
